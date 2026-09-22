@@ -1,0 +1,65 @@
+<resources>
+    <!-- 显示给用户的名字。**++ 是自增运算符**：它不是 opencode 的替代品，是给 opencode 加上的那个 1。 -->
+    <string name="app_name">opencode++</string>
+
+    <string name="nav_sessions">会话</string>
+    <string name="nav_artifacts">产物</string>
+    <string name="nav_settings">设置</string>
+
+    <string name="action_approve">允许一次</string>
+    <string name="action_approve_always">始终允许</string>
+    <string name="action_reject">拒绝</string>
+    <string name="action_save_offline">离线保存</string>
+    <string name="action_saved_offline">已离线</string>
+    <string name="action_share">分享</string>
+    <string name="action_ask_ai">让 AI 读</string>
+    <string name="action_abort">中断</string>
+    <string name="action_open_external">用其他应用打开</string>
+
+    <string name="conn_connected">已连接</string>
+    <string name="conn_connecting">连接中…</string>
+    <string name="conn_reconnecting">正在重连…</string>
+    <string name="conn_offline">未连接</string>
+
+    <string name="notif_channel_connection">连接状态</string>
+    <string name="notif_channel_connection_desc">保持与电脑端的连接，避免息屏断线</string>
+    <string name="notif_channel_permission">权限请求</string>
+    <string name="notif_channel_permission_desc">电脑端需要你确认时提醒你，可直接批准或拒绝</string>
+    <string name="notif_permission_title">opencode 需要你的确认</string>
+    <string name="notif_channel_question">来自 agent 的提问</string>
+    <string name="notif_channel_question_desc">agent 跑到一半问你问题时提醒你，点开可作答</string>
+    <string name="notif_question_title">agent 在等你回答</string>
+
+    <string name="decision_approved">已允许一次 · 电脑端继续执行</string>
+    <string name="decision_approved_always">已允许 · 同类操作以后不再询问</string>
+    <string name="decision_rejected">已拒绝 · 已通知电脑端停止该步骤</string>
+    <string name="decision_failed">提交失败 · 请打开应用重试</string>
+
+    <string name="permission_prompt_title">电脑端需要你确认</string>
+    <string name="permission_prompt_queue">第 %1$d / %2$d 条</string>
+    <string name="permission_prompt_later">稍后</string>
+    <string name="permission_prompt_always_hint">同类操作以后不再询问</string>
+    <string name="permission_prompt_blocking">不答复的话，电脑端这一步会一直卡着等你</string>
+    <string name="question_prompt_title">agent 问你</string>
+    <string name="question_prompt_queue">第 %1$d / %2$d 题</string>
+    <string name="question_prompt_later">稍后</string>
+    <string name="question_prompt_skip">跳过这题</string>
+    <string name="question_prompt_submit">提交</string>
+    <string name="question_prompt_custom">自己填</string>
+    <string name="question_prompt_required">这项必填</string>
+    <string name="question_prompt_answered">已提交 · 电脑端继续执行</string>
+    <string name="question_prompt_blocking">不回答的话，agent 会一直停在这一步</string>
+    <string name="question_field_other">其他</string>
+    <string name="pending_banner_permission">已推迟 · 电脑端还在等你确认</string>
+    <string name="pending_banner_question">已推迟 · agent 还在等你回答</string>
+    <string name="pending_banner_both">已推迟 · 电脑端还在等你处理</string>
+    <string name="pending_banner_more">（还有 %1$d 项）</string>
+    <string name="pending_banner_resume">继续处理</string>
+    <string name="permission_notifications_off">系统通知已关闭 · 电脑端请求确认时收不到提醒</string>
+    <string name="permission_notifications_open">去开启</string>
+
+    <string name="empty_sessions">还没有会话</string>
+    <string name="empty_sessions_hint">在电脑上启动 opencode serve，然后在设置里添加设备</string>
+
+    <string name="permission_post_notifications_rationale">需要通知权限，才能在电脑端请求权限时提醒你</string>
+</resources>

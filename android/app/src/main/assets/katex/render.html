@@ -1,0 +1,287 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="stylesheet" href="katex.min.css">
+<script src="katex.min.js"></script>
+<style>
+  /*
+   * ⚠️ 这张页面必须放在 assets 里用 file:// 打开，不能用 loadDataWithBaseURL。
+   * 后者的页面来源是 data:，WebView 视其为不可信来源，**拦掉 file:// 子资源** ——
+   * JS/CSS 能过、字体过不去，KaTeX 只能拿系统字体凑合排版。
+   *
+   * ⚠️ 这里**不能**出现 overflow:hidden。
+   * KaTeX 的分式、积分上下限、根号是 position:relative 配负 top 的 .vlist，
+   * 它们**不会撑大任何祖先**；祖先一旦 overflow:hidden，这些部分被**直接裁掉**，
+   * 表现就是"分式的分母不见了"。不滚动靠原生侧设尺寸解决，不靠裁。
+   */
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #out {
+    box-sizing: border-box;
+    /* 关键：width:max-content 让元素按**内容自然宽度**排，不受视口宽度限制。
+       用 width:auto + inline-block 时，"自适应宽度"的上限就是自己当前的宽度 ——
+       初始兜底值会变成自我实现的牢笼，公式永远被挤成竖条。 */
+    width: max-content;
+  }
+  .fallback { font-family: monospace; word-break: break-all; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div id="out"></div>
+<script>
+(function () {
+  var out = document.getElementById('out');
+  var lastW = -1, lastH = -1;
+
+  /* ---------- 排版余量（padding）----------
+   *
+   * KaTeX 的分式、上下限、根号是 position:relative 配负 top 的定位元素，
+   * **不会被任何祖先的高度计算统计进去**，于是它们常常伸到 #out 的边框外面。
+   * 容器给不了它们的空间，WebView 按 #out 的高度设尺寸 → 底部/顶部被裁掉，
+   * 表现就是"分式的分母不见了"。
+   *
+   * 为什么不能用 transform 位移来解决：
+   *   translate(#out) 会把容器和子孙一起挪，相对溢出量不变 —— 移了等于没移。
+   *   translate(.katex) 能把内容挪到容器里，但容器不长高，内容就从另一边溢出。
+   *
+   * 所以正确的做法是**给容器买余量**：padding-top 加多少，内容就整体下移多少、
+   * 容器也长高多少，溢出部分自然落进边框里。加了 dt 之后新的溢出量正好是 0，
+   * 一轮收敛，不用迭代猜测。
+   *
+   * 收敛之后，#out 自身就是全部所需尺寸 —— 量它一个就够，
+   * 不必再遍历后代去猜（那会把 width:0 的隐形支柱也算进来，反而虚高）。
+   */
+  var padT = 0, padR = 0, padB = 0, padL = 0;
+  var basePad = [0, 0, 0, 0];   // top right bottom left，由 renderTex 设
+
+  function applyPadding() {
+    out.style.padding =
+      (basePad[0] + padT) + 'px ' + (basePad[1] + padR) + 'px ' +
+      (basePad[2] + padB) + 'px ' + (basePad[3] + padL) + 'px';
+  }
+
+  /**
+   * 量两件事：#out 的自身尺寸，以及内容相对它的**四方向溢出量**。
+   *
+   * 隐形支柱在这里一次性排掉：
+   *   .pstrut        → CSS 里 `width:0`
+   *   .vlist>span    → CSS 里 `height:0`
+   * 所以判据就是 width/height 有任何一个为 0 —— 不画任何东西的元素，
+   * 它的矩形不代表墨迹。这比按 class 逐个排除更可靠（KaTeX 的包裹元素没有 class）。
+   */
+  function measure() {
+    var base = out.getBoundingClientRect();
+    var minL = Infinity, minT = Infinity, maxR = -Infinity, maxB = -Infinity, n = 0;
+
+    var all = out.querySelectorAll('*');
+    for (var i = 0; i < all.length; i++) {
+      var r = all[i].getBoundingClientRect();
+      if (r.width <= 0 || r.height <= 0) continue;   // 隐形支柱，不算墨迹
+      if (r.left < minL) minL = r.left;
+      if (r.top < minT) minT = r.top;
+      if (r.right > maxR) maxR = r.right;
+      if (r.bottom > maxB) maxB = r.bottom;
+      n++;
+    }
+    if (n === 0) { minL = base.left; minT = base.top; maxR = base.right; maxB = base.bottom; }
+
+    // 只取"溢出到外面"的那部分，容器内部的本来就在尺寸里
+    var dt = Math.max(0, Math.round(base.top - minT));
+    var db = Math.max(0, Math.round(maxB - base.bottom));
+    var dl = Math.max(0, Math.round(base.left - minL));
+    var dr = Math.max(0, Math.round(maxR - base.right));
+
+    return {
+      w: Math.ceil(base.width), h: Math.ceil(base.height),
+      dt: dt, db: db, dl: dl, dr: dr
+    };
+  }
+
+  function report() {
+    try {
+      var m = measure();
+      if (m.h <= 0) return;
+
+      // 先用 padding 把溢出"吃"掉，直到不再溢出为止。
+      // 加上 dt 后内容整体下移 dt，新的溢出量就是 0 —— 所以理论上一次收敛；
+      // 循环只是兜住缩放(scale)同时存在时按比例衰减的情况。
+      var rounds = 0;
+      while (rounds < 4 && (m.dt > 0.5 || m.db > 0.5 || m.dl > 0.5 || m.dr > 0.5)) {
+        padT = Math.min(padT + m.dt, 80);
+        padB = Math.min(padB + m.db, 80);
+        padL = Math.min(padL + m.dl, 80);
+        padR = Math.min(padR + m.dr, 80);
+        applyPadding();
+        m = measure();
+        rounds++;
+      }
+
+      var w = m.w, h = m.h;
+      if (w === lastW && h === lastH) return;   // 去重，防止与 ResizeObserver 形成回环
+      lastW = w; lastH = h;
+
+      var info = 'size=' + w + 'x' + h +
+        ' ovf=(t' + m.dt + ' b' + m.db + ' l' + m.dl + ' r' + m.dr + ')' +
+        ' pad=' + Math.round(padT) + '/' + Math.round(padB);
+      try { info += ' | ' + window.katexDeepestInfo(); } catch (e4) {}
+
+      if (window.AndroidKaTeX) window.AndroidKaTeX.report(w, h, info);
+    } catch (e) {}
+  }
+
+  function scheduleReport() {
+    report();
+    requestAnimationFrame(report);
+    [30, 80, 150, 300, 600, 1200].forEach(function (t) { setTimeout(report, t); });
+    // 字体是异步加载的，字体到位前后排版尺寸不同。document.fonts.ready 是可靠的分界点。
+    try {
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () {
+          report();
+          requestAnimationFrame(report);
+          setTimeout(report, 120);
+          // 上报字体加载情况：字体没加载时，KaTeX 的 .vlist 会退回系统字体的行高，
+          // 公式会出现"宽度很窄、高度虚高"的怪象（看起来像被压成竖条）。
+          try {
+            if (window.AndroidKaTeX && window.AndroidKaTeX.note) {
+              window.AndroidKaTeX.note(
+                'fonts=' + document.fonts.size +
+                ' main=' + document.fonts.check('1em KaTeX_Main') +
+                ' math=' + document.fonts.check('1em KaTeX_Math')
+              );
+            }
+          } catch (e2) {}
+        });
+      }
+    } catch (e) {}
+  }
+
+  try { new ResizeObserver(report).observe(out); } catch (e) {}
+
+  /**
+   * @param tex         LaTeX 源码
+   * @param displayMode 块级（居中）还是行内
+   * @param colorHex    颜色
+   * @param fontPx      基准字号（CSS px ≈ dp），由原生按正文字号传下来
+   * @param centered    块级是否居中
+   * @param availPx     原生侧给的**可用宽度**。超宽时才按它等比缩小。
+   *
+   * ⚠️ 绝对不能用 document.documentElement.clientWidth 当可用宽度。
+   * 那是 WebView **此刻**的宽度 —— 首次渲染时它还是原生侧的兜底值（几十 dp），
+   * 于是 scale = 50/220 ≈ 0.23，公式被缩到 23%，看起来又小又像缺了一半。
+   * 可用宽度只有原生知道，必须由它传进来。
+   */
+  window.renderTex = function (tex, displayMode, colorHex, fontPx, centered, availPx) {
+    lastW = -1; lastH = -1;
+
+    document.body.style.display = displayMode ? 'flex' : 'inline-block';
+    if (displayMode) document.body.style.justifyContent = centered ? 'center' : 'flex-start';
+
+    out.style.display = 'block';
+    out.style.width = 'max-content';
+    out.style.maxWidth = 'none';
+    out.style.textAlign = 'left';
+    // 余量归零：padding 是每次渲染重新攒出来的，不能继承上一条公式的。
+    padT = padR = padB = padL = 0;
+    basePad = displayMode ? [6, 8, 6, 8] : [1, 2, 1, 2];
+    applyPadding();
+    out.style.color = colorHex;
+    out.style.fontSize = (fontPx || 15) + 'px';
+    out.style.transform = 'none';
+    out.className = '';
+
+    try {
+      katex.render(tex, out, {
+        displayMode: !!displayMode,
+        throwOnError: false,
+        output: 'html',
+        strict: false
+      });
+    } catch (e) {
+      out.className = 'fallback';
+      out.textContent = tex;
+      scheduleReport();
+      return;
+    }
+
+    // 超宽自适应：仅当原生明确给了可用宽度、且公式确实更宽时才缩。
+    // availPx <= 0 表示原生不知道可用宽度（行内公式就是这种情况）—— 那就**不缩**，
+    // 保持自然尺寸，宁可让它换行/溢出，也不要因为一个猜出来的宽度把公式压小。
+    var m0 = measure();
+    var avail = typeof availPx === 'number' ? availPx : -1;
+    if (displayMode && avail > 0 && m0.w > avail) {
+      out.style.transformOrigin = 'left top';
+      out.style.transform = 'scale(' + (avail / m0.w) + ')';
+      // 缩放后 rect 会反映 transform，重新量一次才是真实显示尺寸
+    }
+
+    // 诊断上报：把页面里真实的计算值报回原生。
+    // 排查"公式高度虚高"时，对比设备与桌面 Chrome 的这几项就能定位差异，
+    // 不用再靠猜。只在原生提供了 note 口子时才发。
+    try {
+      if (window.AndroidKaTeX && window.AndroidKaTeX.note) {
+        var cs = getComputedStyle(out);
+        var k = out.querySelector('.katex');
+        var kr = k ? k.getBoundingClientRect() : null;
+        var mm = measure();
+        window.AndroidKaTeX.note(
+          'dpr=' + (window.devicePixelRatio || 0) +
+          ' viewport=' + document.documentElement.clientWidth +
+          ' out.cssWH=' + cs.width + 'x' + cs.height +
+          ' measure=' + mm.w + 'x' + mm.h +
+          ' ovf=(t' + mm.dt + ' b' + mm.db + ' l' + mm.dl + ' r' + mm.dr + ')' +
+          ' katex=' + (kr ? Math.ceil(kr.width) + 'x' + Math.ceil(kr.height) : 'NA') +
+          ' fontPx=' + cs.fontSize +
+          ' bodyDisplay=' + getComputedStyle(document.body).display +
+          ' || ' + window.katexDeepestInfo()
+        );
+      }
+    } catch (e3) {}
+
+    scheduleReport();
+  };
+
+  // 暴露给调试用：在真机/无头浏览器里可以直接量当前公式的真实内容与溢出。
+  // 公式尺寸问题排查了很久，有这个口子就不用再靠推测。
+  window.katexMeasure = measure;
+
+  /**
+   * 诊断：找出伸得最深/最高的几个元素。
+   * 用于回答"到底是哪个元素让墨迹超出容器"，避免再靠猜。
+   */
+  function deepestInfo() {
+    var base = out.getBoundingClientRect();
+    var rows = [];
+    var all = out.querySelectorAll('*');
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      var cls = el.getAttribute('class') || '';
+      if (/\bpstrut\b/.test(cls)) continue;      // 隐形支柱不算
+      var r = el.getBoundingClientRect();
+      if (r.width <= 0 && r.height <= 0) continue;
+      rows.push({
+        cls: cls.slice(0, 28),
+        bottom: Math.round(r.bottom - base.top),
+        top: Math.round(r.top - base.top),
+        h: Math.ceil(r.height)
+      });
+    }
+    rows.sort(function (a, b) { return b.bottom - a.bottom; });
+    var outArr = [];
+    for (var j = 0; j < Math.min(3, rows.length); j++) {
+      outArr.push(rows[j].cls + '@bottom=' + rows[j].bottom + ' h=' + rows[j].h);
+    }
+    return '容器高=' + Math.ceil(base.height) + ' 最深: ' + outArr.join(' / ');
+  }
+  window.katexDeepestInfo = deepestInfo;
+  window.katexLastReport = function () { return { w: lastW, h: lastH }; };
+
+  window.clearTex = function () {
+    out.textContent = '';
+    lastW = -1; lastH = -1;
+  };
+
+  if (window.AndroidKaTeX && window.AndroidKaTeX.ready) window.AndroidKaTeX.ready();
+})();
+</script>
+</body></html>

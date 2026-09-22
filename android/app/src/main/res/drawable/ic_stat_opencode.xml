@@ -1,0 +1,15 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <!--
+      opencode 官方标记的**单色版**：状态栏图标必须是纯白剪影系统才会按/Android 的着色规则处理，
+      所以这里丢掉官方那块深灰色，只保留白色方框（居中 20×24 的内容，四周留 4 单位）。
+      中间同样靠"外框顺时针 + 内洞逆时针"绕向相反挖出来。
+    -->
+    <path
+        android:pathData="M4,2 L20,2 L20,22 L4,22 Z M8,6 L8,18 L16,18 L16,6 Z"
+        android:fillColor="#FFFFFF" />
+</vector>

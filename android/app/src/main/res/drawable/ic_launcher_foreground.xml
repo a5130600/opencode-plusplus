@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!--
+      opencode 官方标记（取自 opencode.ai/favicon.svg，512×512）：
+      一个 256×320 的方框（线宽 64），内部下侧嵌一块方形。
+
+      这里是按 0.225 等比缩放后的结果：
+        · 内容最长边 320 → 72，落在自适应图标的可见区（中心 72×72）内，
+          任何厂商蒙版都不会把边缘裁掉；
+        · 平移 (54 - 256×0.225) = -3.6，让内容中心对齐到 (54,54)。
+
+      中间的洞**没有用 fillType="evenOdd"**：靠"外框顺时针 + 内洞逆时针"
+      两条子路径绕向相反实现。nonZero 规则下重叠区自动抵消，兼容性比 evenOdd 更稳。
+    -->
+    <!-- 外框（顺时针） + 内洞（逆时针），白色 -->
+    <path
+        android:pathData="M25.2,18 L82.8,18 L82.8,90 L25.2,90 Z M39.6,32.4 L39.6,75.6 L68.4,75.6 L68.4,32.4 Z"
+        android:fillColor="#FFFFFF" />
+    <!-- 内嵌的那一块，官方是深灰 -->
+    <path
+        android:pathData="M39.6,46.8 L68.4,46.8 L68.4,75.6 L39.6,75.6 Z"
+        android:fillColor="#5A5858" />
+</vector>

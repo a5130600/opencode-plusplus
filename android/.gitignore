@@ -1,0 +1,47 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Android 工程忽略清单
+#
+# 判断标准只有一条：**能不能由源码或工具重新生成**。
+# 能重算的一律不进版本库；不能重算的（配置、签名、Room schema）必须进。
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 构建产物
+build/
+/app/build/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Gradle 与构建工具缓存（本机 .gradle 里是文件锁和依赖缓存，可重算）
+.gradle/
+.kotlin/
+
+# 本机专属配置：写死了这台机器的 SDK 路径，换台机器就错，绝不能共享
+local.properties
+
+# IDE
+*.iml
+.idea/
+*.hprof
+captures/
+.externalNativeBuild/
+.cxx/
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
+
+# 签名材料 —— 泄露即等于别人能冒充你发版
+*.jks
+*.keystore
+keystore.properties
+
+# 崩溃与日志
+*.log
+hs_err_pid*.log
+
+# 注意：**不要**忽略 app/schemas/
+# 那是 Room 导出的表结构快照，是写数据库迁移时唯一的参照物，
+# 必须跟着代码一起进版本库（room.schemaLocation 已指向它）。

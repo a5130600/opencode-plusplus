@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>opencode 手机端 · 交互原型</title>
+<style>
+:root{
+  --bg:#EFEDE8;
+  --surface:#FFFFFF;
+  --surface-2:#F7F5F1;
+  --ink:#1E1E1B;
+  --ink-2:#6B6862;
+  --ink-3:#A5A199;
+  --line:#E4E0D8;
+  --line-2:#EFECE6;
+  --accent:#8A6A38;
+  --accent-soft:#F2EADB;
+  --run:#B0742F;
+  --run-soft:#F7EEE0;
+  --ok:#3F6B4F;
+  --ok-soft:#E7EFE9;
+  --warn:#A5443A;
+  --warn-soft:#F6E8E6;
+  --add:#2F6B45;
+  --add-bg:#E9F1EA;
+  --del:#A5443A;
+  --del-bg:#F7E9E7;
+  --r-lg:18px; --r-md:12px; --r-sm:9px;
+  --ease:cubic-bezier(0.32,0.72,0,1);
+  --ease-out:cubic-bezier(0.22,1,0.36,1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:400 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 12px;
+  -webkit-font-smoothing:antialiased;
+}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px}
+.caption{font-size:12px;color:var(--ink-3);letter-spacing:.02em;text-align:center;max-width:390px;line-height:1.7}
+
+.phone{
+  position:relative;width:390px;height:844px;background:var(--surface);
+  border-radius:44px;border:1px solid var(--line);
+  box-shadow:0 24px 60px -20px rgba(30,30,27,.22), 0 2px 8px rgba(30,30,27,.05);
+  overflow:hidden;display:flex;flex-direction:column;
+}
+.statusbar{
+  height:46px;flex:0 0 46px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 26px 6px;font-size:13px;font-weight:500;color:var(--ink);letter-spacing:.01em;
+}
+.sb-icons{display:flex;align-items:center;gap:5px}
+.sb-icons svg{display:block}
+
+.connbar{
+  flex:0 0 auto;height:38px;display:flex;align-items:center;gap:8px;padding:0 16px;
+  border-bottom:1px solid var(--line-2);background:var(--surface-2);
+  font-size:12px;color:var(--ink-2);cursor:pointer;transition:background .18s;
+}
+.connbar:active{background:#F0EDE7}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:0 0 7px;
+  box-shadow:0 0 0 0 rgba(63,107,79,.5);animation:pulse 2.4s var(--ease-out) infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,107,79,.45)}70%{box-shadow:0 0 0 7px rgba(63,107,79,0)}100%{box-shadow:0 0 0 0 rgba(63,107,79,0)}}
+.conn-name{color:var(--ink);font-weight:500}
+.conn-spacer{flex:1}
+.conn-lat{color:var(--ink-3);font-variant-numeric:tabular-nums}
+.conn-chev{color:var(--ink-3);display:flex}
+
+.viewport{position:relative;flex:1;overflow:hidden}
+.screen{
+  position:absolute;inset:0;display:flex;flex-direction:column;background:var(--surface);
+  will-change:transform,opacity;
+}
+.tab-screen{opacity:0;transform:translateY(6px);pointer-events:none;transition:opacity .2s var(--ease-out),transform .2s var(--ease-out)}
+.tab-screen.active{opacity:1;transform:none;pointer-events:auto}
+.push-screen{
+  transform:translateX(100%);transition:transform .34s var(--ease);
+  box-shadow:-12px 0 32px -12px rgba(30,30,27,.16);
+}
+.push-screen.active{transform:translateX(0)}
+
+.scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+
+.navbar{
+  flex:0 0 auto;height:52px;display:flex;align-items:center;gap:10px;padding:0 14px;
+  border-bottom:1px solid var(--line-2);
+}
+.nav-title{font-size:16px;font-weight:500;letter-spacing:-.01em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon-btn{
+  width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  color:var(--ink-2);cursor:pointer;transition:transform .13s var(--ease-out),background .15s;
+}
+.icon-btn:active{transform:scale(.9);background:var(--surface-2)}
+.icon-btn.danger{color:var(--warn)}
+
+.page-head{padding:22px 20px 12px}
+.page-title{font-size:24px;font-weight:500;letter-spacing:-.02em;margin:0}
+.page-sub{font-size:13px;color:var(--ink-3);margin:4px 0 0}
+
+.list{padding:4px 12px 20px}
+.row{
+  display:flex;gap:12px;align-items:flex-start;padding:14px 12px;border-radius:var(--r-lg);
+  cursor:pointer;transition:background .15s,transform .13s var(--ease-out);
+}
+.row:active{background:var(--surface-2);transform:scale(.985)}
+.row + .row{margin-top:2px}
+.row.enter{animation:rowIn .38s var(--ease-out) both}
+@keyframes rowIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.row-main{flex:1;min-width:0}
+.row-title{font-size:15px;font-weight:500;letter-spacing:-.01em;margin:0 0 5px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-3);min-width:0}
+.row-meta-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.row-time{flex:0 0 auto;font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums;padding-top:2px}
+.avatar{
+  flex:0 0 36px;width:36px;height:36px;border-radius:11px;background:var(--surface-2);
+  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink-2)
+}
+.avatar.run{background:var(--run-soft);border-color:#EBDCC4;color:var(--run)}
+.avatar.ok{background:var(--ok-soft);border-color:#D6E4DA;color:var(--ok)}
+.avatar.warn{background:var(--warn-soft);border-color:#EED9D6;color:var(--warn)}
+
+.chip{
+  display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:999px;
+  font-size:11px;font-weight:500;letter-spacing:.01em;background:var(--surface-2);color:var(--ink-2);
+  border:1px solid var(--line-2);
+  white-space:nowrap;word-break:keep-all;flex:0 0 auto;line-height:1;
+}
+.chip.run{background:var(--run-soft);color:var(--run);border-color:#EBDCC4}
+.chip.ok{background:var(--ok-soft);color:var(--ok);border-color:#D6E4DA}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:#EED9D6}
+.chip.solid{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.bubble{max-width:82%;padding:11px 14px;border-radius:var(--r-lg);font-size:14px;line-height:1.62}
+.bubble.me{align-self:flex-end;background:var(--ink);color:#F5F3EF;border-bottom-right-radius:6px}
+.bubble.ai{align-self:flex-start;background:var(--surface-2);border:1px solid var(--line-2);border-bottom-left-radius:6px}
+.chat-scroll{padding:16px 16px 8px;display:flex;flex-direction:column;gap:14px}
+
+.step{display:flex;gap:9px;align-items:center;font-size:13px;color:var(--ink-2);padding:2px 0}
+.step .box{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--line);flex:0 0 16px;
+  display:flex;align-items:center;justify-content:center;transition:all .25s var(--ease-out)}
+.step.done .box{background:var(--ok);border-color:var(--ok)}
+.step.done .box svg{opacity:1;transform:scale(1)}
+.step .box svg{opacity:0;transform:scale(.4);transition:all .25s var(--ease-out)}
+.step.done span{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--line)}
+
+.tool-card{
+  align-self:stretch;border:1px solid var(--line-2);border-radius:var(--r-md);background:var(--surface-2);
+  padding:10px 12px;display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-2)
+}
+.tool-card code{font:500 12px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink)}
+.spin{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--line);border-top-color:var(--run);
+  animation:spin .7s linear infinite;flex:0 0 13px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.perm{
+  align-self:stretch;border:1px solid #EBDCC4;background:var(--run-soft);border-radius:var(--r-lg);
+  padding:14px;animation:cardIn .34s var(--ease-out) both;
+}
+@keyframes cardIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+.perm-head{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--run);margin-bottom:8px}
+.perm-body{font-size:13px;color:var(--ink);line-height:1.6;margin-bottom:12px}
+.perm-body code{font:500 12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#fff;padding:1px 5px;border-radius:5px;border:1px solid #EBDCC4}
+.perm-actions{display:flex;gap:9px}
+.perm-actions.gone{animation:collapse .3s var(--ease-out) forwards}
+@keyframes collapse{to{opacity:0;transform:translateY(-6px);height:0;margin:0;padding:0;overflow:hidden}}
+
+.btn{
+  flex:1;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--surface);
+  color:var(--ink);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:transform .13s var(--ease-out),background .15s,opacity .2s;
+}
+.btn:active{transform:scale(.96)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.ghost{background:transparent}
+
+.artifact{
+  align-self:stretch;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);
+  overflow:hidden;animation:cardIn .34s var(--ease-out) both;cursor:pointer;transition:transform .14s var(--ease-out)
+}
+.artifact:active{transform:scale(.985)}
+.artifact-head{display:flex;align-items:center;gap:10px;padding:13px 14px}
+.artifact-ico{width:32px;height:32px;border-radius:9px;background:var(--accent-soft);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;flex:0 0 32px}
+.artifact-t{flex:1;min-width:0}
+.artifact-t b{display:block;font-size:13.5px;font-weight:500;letter-spacing:-.005em}
+.artifact-t small{font-size:11.5px;color:var(--ink-3)}
+.artifact-foot{display:flex;align-items:center;gap:14px;padding:9px 14px;border-top:1px solid var(--line-2);
+  background:var(--surface-2);font-size:11.5px;color:var(--ink-2)}
+.stat-add{color:var(--add);font-weight:500}
+.stat-del{color:var(--del);font-weight:500}
+
+.composer{
+  flex:0 0 auto;border-top:1px solid var(--line-2);padding:10px 12px 14px;background:var(--surface);
+}
+.model-chip{
+  display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;
+  background:var(--surface-2);border:1px solid var(--line);font-size:12px;color:var(--ink-2);
+  cursor:pointer;margin-bottom:9px;transition:transform .13s var(--ease-out),background .15s;
+}
+.model-chip:active{transform:scale(.95);background:#F0EDE7}
+.model-chip b{font-weight:500;color:var(--ink)}
+.input-row{display:flex;align-items:flex-end;gap:9px}
+.input-box{
+  flex:1;min-height:40px;border-radius:13px;border:1px solid var(--line);background:var(--surface-2);
+  padding:10px 13px;font-size:14px;line-height:1.4;color:var(--ink-3);outline:none;
+  transition:border-color .18s,background .18s;
+}
+.input-box:focus{border-color:#D9D3C6;background:var(--surface);color:var(--ink)}
+.send{
+  width:40px;height:40px;flex:0 0 40px;border-radius:13px;border:none;background:var(--ink);color:#fff;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform .13s var(--ease-out),opacity .2s;
+}
+.send:active{transform:scale(.92)}
+.send.off{background:var(--line);color:var(--ink-3);pointer-events:none}
+
+.dots{display:flex;gap:4px;align-items:center;height:44px;padding:0 14px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--ink-3);display:block;animation:bounce 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.15s}
+.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+.caret{display:inline-block;width:2px;height:15px;background:var(--ink);vertical-align:-2px;margin-left:2px;
+  animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.tabbar{
+  flex:0 0 auto;height:62px;display:flex;align-items:center;padding:0 8px 8px;
+  border-top:1px solid var(--line-2);background:rgba(255,255,255,.94);backdrop-filter:blur(12px);
+  transition:transform .28s var(--ease),opacity .2s;
+}
+.tabbar.hide{transform:translateY(100%);opacity:0;pointer-events:none}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-3);
+  font-size:10.5px;cursor:pointer;padding:8px 0;transition:color .2s;position:relative;
+}
+.tab .ico{transition:transform .26s var(--ease-out)}
+.tab.active{color:var(--ink)}
+.tab.active .ico{transform:translateY(-1px) scale(1.06)}
+.tab .badge{
+  position:absolute;top:4px;left:50%;margin-left:5px;min-width:15px;height:15px;border-radius:999px;
+  background:var(--run);color:#fff;font-size:9.5px;font-weight:500;display:flex;align-items:center;
+  justify-content:center;padding:0 4px;
+}
+
+.metric{display:flex;gap:10px;padding:0 16px 18px}
+.metric div{flex:1;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:11px 12px}
+.metric b{display:block;font-size:19px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.metric small{font-size:11px;color:var(--ink-3)}
+
+.section{padding:0 16px 8px}
+.section-title{font-size:11px;font-weight:500;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;padding:14px 4px 8px}
+.card{background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-lg);overflow:hidden}
+.item{display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;transition:background .15s}
+.item:active{background:#F0EDE7}
+.item + .item{border-top:1px solid var(--line-2)}
+.item .ico{width:30px;height:30px;border-radius:9px;background:var(--surface);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:var(--ink-2);flex:0 0 30px}
+.item-t{flex:1;min-width:0}
+.item-t b{display:block;font-size:14px;font-weight:500;letter-spacing:-.005em}
+.item-t small{font-size:11.5px;color:var(--ink-3)}
+.item .val{font-size:12.5px;color:var(--ink-3);display:flex;align-items:center;gap:6px}
+
+.diff{font:400 11.5px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--surface-2);
+  border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);overflow:hidden;max-height:0;
+  transition:max-height .34s var(--ease);}
+.diff.open{max-height:260px;overflow-y:auto}
+.diff .ln{display:flex;padding:0 14px;white-space:pre}
+.diff .ln.add{background:var(--add-bg);color:var(--add)}
+.diff .ln.del{background:var(--del-bg);color:var(--del)}
+.diff .ln.ctx{color:var(--ink-2)}
+.diff .gutter{width:34px;flex:0 0 34px;color:var(--ink-3);text-align:right;padding-right:10px;user-select:none}
+
+.ws-btn{display:inline-flex;align-items:center;gap:7px;margin-top:12px;height:32px;padding:0 11px;
+  border-radius:10px;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;max-width:100%;
+  font-family:inherit;font-size:12px;color:var(--ink-2);
+  transition:transform .13s var(--ease-out),background .15s}
+.ws-btn:active{transform:scale(.97);background:#F0EDE7}
+.ws-path{font:400 11.5px/1 ui-monospace,Menlo,Consolas,monospace;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ws-btn .chev{flex:0 0 auto;color:var(--ink-3);display:flex}
+.ws-ico{width:30px;height:30px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:var(--ink-2);flex:0 0 30px}
+.ws-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.ws-t b{font-size:13.5px;font-weight:500;letter-spacing:-.005em;color:var(--ink)}
+.ws-t small{font:400 11px/1.4 ui-monospace,Menlo,Consolas,monospace;color:var(--ink-3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-div{height:1px;background:var(--line-2);margin:8px 12px}
+
+.file-tabs{display:flex;gap:6px;padding:10px 14px;overflow-x:auto;border-bottom:1px solid var(--line-2);flex:0 0 auto}
+.file-tabs::-webkit-scrollbar{display:none}
+.ftab{flex:0 0 auto;height:28px;padding:0 12px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface-2);color:var(--ink-2);font-size:12px;display:flex;align-items:center;cursor:pointer;
+  transition:all .18s var(--ease-out)}
+.ftab:active{transform:scale(.95)}
+.ftab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.convertbar{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:8px 16px;font-size:11.5px;color:var(--accent);
+  background:var(--accent-soft);border-bottom:1px solid #EADFC9}
+.viewer{flex:1;overflow:auto;background:var(--surface-2);padding:14px}
+.doc-sheet{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:20px 18px;
+  font-size:13px;line-height:1.85;color:#3A3A36;animation:cardIn .3s var(--ease-out) both}
+.doc-sheet h4{margin:0 0 4px;font-size:16px;font-weight:500;letter-spacing:-.01em;color:var(--ink)}
+.doc-sheet .em{color:var(--ink-3);font-size:11.5px;margin:0 0 14px}
+.doc-sheet p{margin:0 0 11px}
+.doc-sheet td b{font-weight:500;color:var(--ink)}
+.grid-wrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:var(--r-sm)}
+.grid{border-collapse:separate;border-spacing:0;font-size:11.5px;white-space:nowrap}
+.grid th,.grid td{border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2);padding:7px 12px;
+  text-align:left;font-variant-numeric:tabular-nums;color:#3A3A36}
+.grid th{background:var(--surface-2);font-weight:500;color:var(--ink);position:sticky;top:0}
+.grid td.num{text-align:right}
+.grid tr:last-child td{border-bottom:none}
+.code-view{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;
+  font:400 11.5px/1.8 ui-monospace,Menlo,Consolas,monospace}
+.code-view .cr{display:flex;padding:0 12px}
+.code-view .n{width:28px;flex:0 0 28px;text-align:right;padding-right:12px;color:var(--ink-3);user-select:none}
+.code-view .k{color:#8A6A38}.code-view .s{color:#2F6B45}.code-view .c{color:#A5A199}
+.img-wrap{display:flex;align-items:center;justify-content:center;min-height:270px;border-radius:var(--r-md);
+  border:1px solid var(--line);background:repeating-conic-gradient(#F0EDE7 0% 25%,#FAF8F5 0% 50%) 50%/18px 18px}
+.img-ph{width:186px;height:126px;border-radius:10px;background:#E6DFD0;border:1px solid #D6CDBA;
+  display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.filebar{flex:0 0 auto;display:flex;gap:9px;padding:10px 14px 14px;border-top:1px solid var(--line-2);background:var(--surface)}
+.meter{height:7px;border-radius:4px;background:var(--line-2);overflow:hidden;display:flex}
+.meter i{display:block;height:100%}
+
+.sheet-backdrop{
+  position:absolute;inset:0;background:rgba(30,30,27,.28);opacity:0;pointer-events:none;
+  transition:opacity .3s var(--ease-out);z-index:40;
+}
+.sheet-backdrop.show{opacity:1;pointer-events:auto}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:24px 24px 0 0;
+  transform:translateY(101%);transition:transform .38s var(--ease);z-index:41;
+  padding:8px 0 22px;max-height:78%;display:flex;flex-direction:column;
+  box-shadow:0 -12px 40px -14px rgba(30,30,27,.24);
+}
+.sheet.show{transform:translateY(0)}
+.handle{width:36px;height:4px;border-radius:2px;background:var(--line);margin:6px auto 12px;flex:0 0 4px}
+.sheet-title{font-size:16px;font-weight:500;padding:0 20px 4px;letter-spacing:-.01em}
+.sheet-sub{font-size:12px;color:var(--ink-3);padding:0 20px 12px}
+.sheet-scroll{overflow-y:auto;padding:0 10px 4px}
+.mgroup{font-size:11px;font-weight:500;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;padding:12px 12px 6px}
+.mrow{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:var(--r-md);cursor:pointer;transition:background .15s}
+.mrow:active{background:var(--surface-2)}
+.mrow .mname{flex:1;font-size:14px;letter-spacing:-.005em}
+.mrow .mtag{font-size:11px;color:var(--ink-3)}
+.mrow .tick{width:18px;height:18px;color:var(--ink);opacity:0;transform:scale(.6);transition:all .22s var(--ease-out)}
+.mrow.sel .tick{opacity:1;transform:scale(1)}
+
+.toast{
+  position:absolute;left:50%;bottom:88px;transform:translate(-50%,14px);opacity:0;pointer-events:none;
+  background:rgba(30,30,27,.94);color:#F5F3EF;font-size:13px;padding:10px 16px;border-radius:12px;
+  z-index:60;transition:all .3s var(--ease);white-space:nowrap;max-width:88%;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+.skel{background:linear-gradient(90deg,var(--surface-2) 25%,#EFECE6 50%,var(--surface-2) 75%);
+  background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px}
+@keyframes shimmer{to{background-position:-200% 0}}
+.skel-row{display:flex;gap:12px;padding:14px 12px}
+.skel-row .a{width:36px;height:36px;border-radius:11px;flex:0 0 36px}
+.skel-row .b{flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center}
+.skel-row .b i{display:block;height:11px;border-radius:5px}
+.skel-row .b i:last-child{width:58%}
+
+.empty{display:flex;flex-direction:column;align-items:center;gap:9px;padding:66px 30px;text-align:center;color:var(--ink-3)}
+.empty b{font-size:14px;font-weight:500;color:var(--ink-2)}
+.empty p{font-size:12.5px;margin:0;line-height:1.6}
+
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+<div class="phone">
+  <div class="statusbar">
+    <span>23:44</span>
+    <span class="sb-icons">
+      <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><rect x="0" y="7" width="2.5" height="4" rx="1" fill="#1E1E1B"/><rect x="4" y="5" width="2.5" height="6" rx="1" fill="#1E1E1B"/><rect x="8" y="2.5" width="2.5" height="8.5" rx="1" fill="#1E1E1B"/><rect x="12" y="0" width="2.5" height="11" rx="1" fill="#1E1E1B"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 10.4 5.9 8.2a3 3 0 0 1 4.2 0L8 10.4Z" fill="#1E1E1B"/><path d="M3.4 5.7a6.6 6.6 0 0 1 9.2 0" stroke="#1E1E1B" stroke-width="1.5" stroke-linecap="round"/><path d="M1 3.1a10 10 0 0 1 14 0" stroke="#1E1E1B" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="20" height="11" rx="3.2" stroke="#1E1E1B" stroke-opacity=".35"/><rect x="2" y="2" width="15" height="8" rx="2" fill="#1E1E1B"/><path d="M22.4 4.2v3.6a2 2 0 0 0 0-3.6Z" fill="#1E1E1B" fill-opacity=".35"/></svg>
+    </span>
+  </div>
+
+  <div class="connbar" onclick="switchDevice()">
+    <span class="dot"></span>
+    <span class="conn-name">已连接 · 家 · 台式机</span>
+    <span class="conn-spacer"></span>
+    <span class="conn-lat">Tailscale · 42ms</span>
+    <span class="conn-chev"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+  </div>
+
+  <div class="viewport">
+
+    <section class="screen tab-screen active" id="s-home">
+      <div class="page-head">
+        <h1 class="page-title">会话</h1>
+        <button class="ws-btn" onclick="openWs()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h4l2 2.5h7A1.5 1.5 0 0 1 20 8v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z"/></svg>
+          <span class="ws-path" id="ws-label">~/projects/opencode-app</span>
+          <span class="chev"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        </button>
+        <p class="page-sub" style="margin-top:10px">3 个会话 · 1 个正在运行</p>
+      </div>
+      <div class="scroll">
+        <div id="home-list" class="list"></div>
+      </div>
+    </section>
+
+    <section class="screen tab-screen" id="s-artifacts">
+      <div class="page-head">
+        <h1 class="page-title">产物</h1>
+        <p class="page-sub">最近 24 小时 · 16 个文件</p>
+      </div>
+      <div class="scroll">
+        <div class="metric">
+          <div><b>12</b><small>改动文件</small></div>
+          <div><b>+248</b><small>新增行</small></div>
+          <div><b>−76</b><small>删除行</small></div>
+        </div>
+        <div class="section">
+          <div class="section-title">本次任务产出</div>
+          <div class="card" id="art-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen tab-screen" id="s-settings">
+      <div class="page-head">
+        <h1 class="page-title">设置</h1>
+      </div>
+      <div class="scroll">
+        <div class="section">
+          <div class="section-title">设备</div>
+          <div class="card">
+            <div class="item" onclick="switchDevice()">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+              <span class="item-t"><b>家 · 台式机</b><small>100.x.y.7:4096 · Tailscale</small></span>
+              <span class="val"><span class="chip ok">在线</span></span>
+            </div>
+            <div class="item" onclick="switchDevice()">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+              <span class="item-t"><b>公司 · MacBook</b><small>100.x.y.31:4096 · Tailscale</small></span>
+              <span class="val"><span class="chip">离线</span></span>
+            </div>
+            <div class="item" onclick="openWs()">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h4l2 2.5h7A1.5 1.5 0 0 1 20 8v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z"/></svg></span>
+              <span class="item-t"><b>默认工作区</b><small>新会话默认在此项目下创建</small></span>
+              <span class="val" id="def-ws">opencode-app</span>
+            </div>
+            <div class="item" onclick="toast('扫码配对：导入地址与凭据')">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
+              <span class="item-t"><b>添加设备</b><small>扫码或手动填写地址</small></span>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">模型</div>
+          <div class="card">
+            <div class="item" onclick="openSheet()">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v5c0 4.4 3.4 8.3 8 9 4.6-.7 8-4.6 8-9V7l-8-4Z"/></svg></span>
+              <span class="item-t"><b>默认模型</b><small>新会话使用</small></span>
+              <span class="val" id="def-model">Claude Sonnet 4.5</span>
+            </div>
+            <div class="item" onclick="toast('从 /provider 拉取账号可用模型')">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></span>
+              <span class="item-t"><b>刷新模型列表</b><small>同步电脑端已登录的 provider</small></span>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">后台与通知</div>
+          <div class="card">
+            <div class="item" onclick="toast('已开启：保持连接与权限提醒')">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+              <span class="item-t"><b>权限请求通知</b><small>需要审批时推送到通知栏</small></span>
+              <span class="val"><span class="chip ok">已开启</span></span>
+            </div>
+            <div class="item" onclick="toast('前台服务常驻，避免息屏断连')">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></span>
+              <span class="item-t"><b>保持后台连接</b><small>前台服务 · 息屏不断线</small></span>
+              <span class="val"><span class="chip ok">已开启</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">存储</div>
+          <div class="card">
+            <div class="item" style="cursor:default">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span>
+              <span class="item-t"><b>缓存占用</b><small>预览与转换产物 · 可随时清理</small></span>
+              <span class="val">128 MB</span>
+            </div>
+            <div style="padding:0 15px 14px">
+              <div class="meter"><i style="width:26%;background:#B0742F"></i><i style="width:9%;background:#3F6B4F"></i><i style="width:65%;background:transparent"></i></div>
+              <div style="display:flex;gap:14px;font-size:11px;color:var(--ink-3);margin-top:8px">
+                <span>预览缓存 128MB</span><span>离线 42MB</span><span>配额 500MB</span>
+              </div>
+            </div>
+            <div class="item" onclick="toast('已清理 128 MB 预览缓存，离线文件不受影响')">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></span>
+              <span class="item-t"><b>清理预览缓存</b><small>已离线保存的文件不受影响</small></span>
+            </div>
+            <div class="item" onclick="toast('离线文件按设备与会话分组存放')">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h4l2 2.5h7A1.5 1.5 0 0 1 20 8v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z"/></svg></span>
+              <span class="item-t"><b>离线文件</b><small>42 MB · 12 个文件</small></span>
+            </div>
+          </div>
+        </div>
+        <div class="section" style="padding-bottom:26px">
+          <div class="section-title">关于</div>
+          <div class="card">
+            <div class="item" onclick="toast('opencode 0.x · 服务端版本以此为准')">
+              <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg></span>
+              <span class="item-t"><b>版本</b><small>检查服务端与客户端版本</small></span>
+              <span class="val" id="ver">0.1.0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen push-screen" id="s-chat">
+      <div class="navbar">
+        <span class="icon-btn" onclick="pop()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></span>
+        <span class="nav-title" id="chat-title">重构 auth 中间件</span>
+        <span class="icon-btn danger" id="abort-btn" onclick="abortRun()"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg></span>
+        <span class="icon-btn" onclick="toast('会话详情 / 分享 / 回滚')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></span>
+      </div>
+      <div class="scroll"><div class="chat-scroll" id="chat-body"></div></div>
+      <div class="composer">
+        <div class="model-chip" onclick="openSheet()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 8 4v5c0 4.4-3.4 8.3-8 9-4.6-.7-8-4.6-8-9V7l8-4Z"/></svg>
+          <b id="chip-model">Claude Sonnet 4.5</b>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div class="input-row">
+          <input class="input-box" id="msg-input" placeholder="给电脑上的 opencode 下指令…" onkeydown="if(event.key==='Enter')sendMsg()">
+          <button class="send off" id="send-btn" onclick="sendMsg()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen push-screen" id="s-file">
+      <div class="navbar">
+        <span class="icon-btn" onclick="popFile()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></span>
+        <span class="nav-title" id="file-title">季度复盘.docx</span>
+        <span class="icon-btn" onclick="toast('重新转换 / 重命名 / 删除本地缓存')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></span>
+      </div>
+      <div class="file-tabs" id="file-tabs">
+        <div class="ftab" data-t="doc" onclick="pickType('doc')">文档</div>
+        <div class="ftab" data-t="grid" onclick="pickType('grid')">表格</div>
+        <div class="ftab" data-t="code" onclick="pickType('code')">代码</div>
+        <div class="ftab" data-t="img" onclick="pickType('img')">图片</div>
+      </div>
+      <div class="convertbar">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.7L20 8"/><path d="M20 4v4h-4M20 12a8 8 0 0 1-13.7 5.7L4 16"/><path d="M4 20v-4h4"/></svg>
+        <span id="convert-text">电脑端已转换 · 结果已缓存</span>
+      </div>
+      <div class="viewer" id="viewer-body"></div>
+      <div class="filebar">
+        <button class="btn" id="offline-btn" onclick="toggleOffline()">离线保存</button>
+        <button class="btn" onclick="toast('已调起系统分享面板')">分享</button>
+        <button class="btn primary" onclick="toast('已发送到 opencode：解读这个文件')">让 AI 读</button>
+      </div>
+    </section>
+
+  </div>
+
+  <nav class="tabbar" id="tabbar">
+    <div class="tab active" data-tab="home" onclick="setTab('home')">
+      <span class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12Z"/></svg></span>
+      会话
+    </div>
+    <div class="tab" data-tab="artifacts" onclick="setTab('artifacts')">
+      <span class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h4l2 2.5h7A1.5 1.5 0 0 1 20 8v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z"/></svg></span>
+      产物
+      <span class="badge">3</span>
+    </div>
+    <div class="tab" data-tab="settings" onclick="setTab('settings')">
+      <span class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></span>
+      设置
+    </div>
+  </nav>
+
+  <div class="sheet-backdrop" id="backdrop" onclick="closeSheet()"></div>
+  <div class="sheet" id="sheet">
+    <div class="handle"></div>
+    <div class="sheet-title">选择模型</div>
+    <div class="sheet-sub">来自电脑端已登录的 provider</div>
+    <div class="sheet-scroll">
+      <div class="mgroup">Anthropic</div>
+      <div class="mrow sel" onclick="pickModel(this,'Claude Sonnet 4.5')"><span class="mname">Claude Sonnet 4.5</span><span class="mtag">默认</span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span></div>
+      <div class="mrow" onclick="pickModel(this,'Claude Opus 4.1')"><span class="mname">Claude Opus 4.1</span><span class="mtag">强推理</span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span></div>
+      <div class="mgroup">OpenAI</div>
+      <div class="mrow" onclick="pickModel(this,'GPT-5')"><span class="mname">GPT-5</span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span></div>
+      <div class="mrow" onclick="pickModel(this,'GPT-5 mini')"><span class="mname">GPT-5 mini</span><span class="mtag">快</span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span></div>
+      <div class="mgroup">DeepSeek</div>
+      <div class="mrow" onclick="pickModel(this,'DeepSeek V3.2')"><span class="mname">DeepSeek V3.2</span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span></div>
+      <div class="mgroup">本地</div>
+      <div class="mrow" onclick="pickModel(this,'qwen2.5-coder (Ollama)')"><span class="mname">qwen2.5-coder</span><span class="mtag">Ollama · 离线</span><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span></div>
+    </div>
+  </div>
+
+  <div class="sheet" id="ws-sheet">
+    <div class="handle"></div>
+    <div class="sheet-title">工作区</div>
+    <div class="sheet-sub">电脑端 opencode 已打开的项目</div>
+    <div class="sheet-scroll">
+      <div class="mrow sel" onclick="pickWs(this,'~/projects/opencode-app')">
+        <span class="ws-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h4l2 2.5h7A1.5 1.5 0 0 1 20 8v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z"/></svg></span>
+        <span class="ws-t"><b>opencode-app</b><small>~/projects/opencode-app · main</small></span>
+        <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span>
+      </div>
+      <div class="mrow" onclick="pickWs(this,'~/work/api-gateway')">
+        <span class="ws-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h4l2 2.5h7A1.5 1.5 0 0 1 20 8v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z"/></svg></span>
+        <span class="ws-t"><b>api-gateway</b><small>~/work/api-gateway · dev</small></span>
+        <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span>
+      </div>
+      <div class="mrow" onclick="pickWs(this,'~/work/data-pipeline')">
+        <span class="ws-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h4l2 2.5h7A1.5 1.5 0 0 1 20 8v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z"/></svg></span>
+        <span class="ws-t"><b>data-pipeline</b><small>~/work/data-pipeline · main</small></span>
+        <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span>
+      </div>
+      <div class="ws-div"></div>
+      <div class="mrow" onclick="closeSheet();toast('输入电脑上的目录路径以打开新工作区')">
+        <span class="ws-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span class="ws-t"><b>打开其他目录</b><small>输入路径 · 由电脑端打开</small></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="dev-sheet">
+    <div class="handle"></div>
+    <div class="sheet-title">切换设备</div>
+    <div class="sheet-sub">通过 Tailscale 私网连接</div>
+    <div class="sheet-scroll">
+      <div class="mrow sel" onclick="pickDev(this,'家 · 台式机')">
+        <span class="ws-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+        <span class="ws-t"><b>家 · 台式机</b><small>100.x.y.7:4096 · 42ms</small></span>
+        <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span>
+      </div>
+      <div class="mrow" onclick="pickDev(this,'公司 · MacBook')">
+        <span class="ws-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+        <span class="ws-t"><b>公司 · MacBook</b><small>100.x.y.31:4096 · 当前离线</small></span>
+        <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 5 5L19 7"/></svg></span>
+      </div>
+      <div class="ws-div"></div>
+      <div class="mrow" onclick="closeSheet();toast('扫码配对：导入地址与凭据')">
+        <span class="ws-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span class="ws-t"><b>添加设备</b><small>扫码或手动填写地址</small></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+<div class="caption">opencode 手机端 · 高保真交互原型<br>会话列表可切工作区 · 顶部连接条可切设备 · 建议用手机浏览器打开</div>
+</div>
+
+<script>
+const SESSIONS = [
+  {id:'a', title:'重构 auth 中间件', status:'run', label:'运行中', time:'刚刚', icon:'run',
+   svg:'<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>',
+   meta:'正在编辑 src/auth/middleware.ts · 3 个文件'},
+  {id:'b', title:'修复登录页 SSR 报错', status:'warn', label:'待审批', time:'12 分钟', icon:'warn',
+   svg:'<path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
+   meta:'需要你确认 1 个权限请求'},
+  {id:'c', title:'优化打包体积', status:'ok', label:'已完成', time:'昨天', icon:'ok',
+   svg:'<path d="m5 13 5 5L19 7"/>',
+   meta:'12 个产物 · 已导出 2 个'}
+];
+const ARTIFACTS = [
+  {n:'src/auth/middleware.ts', k:'改动', d:'+124', a:'−38'},
+  {n:'src/auth/jwt.ts', k:'新增', d:'+86', a:'−0'},
+  {n:'tests/auth.spec.ts', k:'新增', d:'+38', a:'−0'},
+  {n:'季度复盘.docx', k:'新增', office:true},
+  {n:'预算表.xlsx', k:'新增', office:true},
+  {n:'README.md', k:'改动', d:'+0', a:'−38'}
+];
+const ICONS = {
+  code:'<path d="m9 18-6-6 6-6M15 6l6 6-6 6"/>',
+  chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12Z"/>',
+  check:'<path d="m5 13 5 5L19 7"/>',
+  file:'<path d="M14 3v5h5M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/>'
+};
+const svgIco = (p,s=17)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const $ = id => document.getElementById(id);
+
+/* ---------- 首屏骨架屏 ---------- */
+function renderSkeleton(){
+  $('home-list').innerHTML = [0,1,2].map(()=>`
+    <div class="skel-row">
+      <div class="a skel"></div>
+      <div class="b"><i class="skel" style="width:62%"></i><i class="skel"></i></div>
+    </div>`).join('');
+}
+
+/* ---------- 会话列表 ---------- */
+function renderSessions(){
+  $('home-list').innerHTML = SESSIONS.map((s,i)=>`
+    <div class="row enter" style="animation-delay:${i*55}ms" onclick="openChat('${s.id}')">
+      <span class="avatar ${s.icon}">${svgIco(s.svg)}</span>
+      <span class="row-main">
+        <p class="row-title">${s.title}</p>
+        <span class="row-meta"><span class="chip ${s.status}">${s.label}</span><span class="row-meta-t">${s.meta}</span></span>
+      </span>
+      <span class="row-time">${s.time}</span>
+    </div>`).join('');
+}
+
+/* ---------- 产物 ---------- */
+function renderArtifacts(){
+  $('art-list').innerHTML = ARTIFACTS.map(a=>`
+    <div class="item" onclick="openFile('${a.n}')">
+      <span class="ico">${svgIco(a.office?ICONS.file:ICONS.code,16)}</span>
+      <span class="item-t"><b style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">${a.n}</b>
+      <small>${a.k}</small></span>
+      <span class="val">${a.office
+        ? '<span class="chip">转换预览</span>'
+        : `<b class="stat-add">${a.d}</b><b class="stat-del">${a.a}</b>`}</span>
+    </div>`).join('');
+}
+
+/* ---------- 文件查看器 ---------- */
+const EXT = {
+  code:['ts','tsx','js','jsx','py','go','rs','java','kt','json','yaml','yml','toml','sql','sh','md','txt','log','xml','html','css'],
+  grid:['xlsx','xls','csv','tsv'],
+  img:['png','jpg','jpeg','webp','gif','svg','bmp'],
+  doc:['docx','doc','pptx','ppt','pdf','rtf','odt']
+};
+function typeOf(name){
+  const e = (name.split('.').pop()||'').toLowerCase();
+  for(const k in EXT) if(EXT[k].includes(e)) return k;
+  return 'doc';
+}
+const VIEW = {
+  doc:()=>`
+    <div class="doc-sheet">
+      <h4>Q3 季度复盘</h4>
+      <p class="em">季度复盘.docx · 由电脑端 LibreOffice 转换为 PDF · 2 页</p>
+      <p><b>一、目标完成情况</b></p>
+      <p>本季度核心指标整体达成率 112%。其中认证模块重构按期交付，打包体积下降 34%，冷启动时间从 2.4s 优化到 1.6s。</p>
+      <table>
+        <tr><td><b>指标</b></td><td><b>目标</b></td><td><b>实际</b></td><td><b>达成</b></td></tr>
+        <tr><td>打包体积</td><td>−20%</td><td>−34%</td><td>超额</td></tr>
+        <tr><td>冷启动</td><td>−30%</td><td>−33%</td><td>达成</td></tr>
+        <tr><td>单测覆盖</td><td>70%</td><td>74%</td><td>达成</td></tr>
+      </table>
+      <p style="margin-top:14px"><b>二、下季度重点</b></p>
+      <p>补齐可观测性建设；把认证模块迁移到统一网关；继续压缩首屏资源。</p>
+    </div>`,
+  grid:()=>`
+    <div class="grid-wrap"><table class="grid">
+      <tr><th>部门</th><th>Q2 实际</th><th>Q3 预算</th><th>Q3 实际</th><th>偏差</th></tr>
+      <tr><td>研发</td><td class="num">128.0</td><td class="num">140.0</td><td class="num">134.6</td><td class="num">−3.9%</td></tr>
+      <tr><td>市场</td><td class="num">86.5</td><td class="num">95.0</td><td class="num">102.3</td><td class="num">+7.7%</td></tr>
+      <tr><td>运营</td><td class="num">52.1</td><td class="num">60.0</td><td class="num">57.4</td><td class="num">−4.3%</td></tr>
+      <tr><td>行政</td><td class="num">21.3</td><td class="num">22.0</td><td class="num">21.8</td><td class="num">−0.9%</td></tr>
+      <tr><td><b>合计</b></td><td class="num"><b>287.9</b></td><td class="num"><b>317.0</b></td><td class="num"><b>316.1</b></td><td class="num"><b>−0.3%</b></td></tr>
+    </table></div>`,
+  code:()=>`
+    <div class="code-view">
+      <div class="cr"><span class="n">1</span><span><span class="c">// 已抽到独立模块</span></span></div>
+      <div class="cr"><span class="n">2</span><span><span class="k">export function</span> auth(req, res, next) {</span></div>
+      <div class="cr"><span class="n">3</span><span>  <span class="k">const</span> t = readToken(req)</span></div>
+      <div class="cr"><span class="n">4</span><span>  <span class="k">if</span> (!verifyJwt(t)) <span class="k">return</span> reject(res)</span></div>
+      <div class="cr"><span class="n">5</span><span>  req.user = decode(t)</span></div>
+      <div class="cr"><span class="n">6</span><span>  next()</span></div>
+      <div class="cr"><span class="n">7</span><span>}</span></div>
+      <div class="cr"><span class="n">8</span><span></span></div>
+      <div class="cr"><span class="n">9</span><span><span class="k">const</span> ALGO = <span class="s">'HS256'</span></span></div>
+    </div>`,
+  img:()=>`
+    <div class="img-wrap">
+      <div class="img-ph">${svgIco('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.6"/><path d="m21 15-5-5L5 21"/>',34)}</div>
+    </div>`
+};
+let offline = false;
+function openFile(name){
+  $('file-title').textContent = name;
+  const t = typeOf(name);
+  const off = false; offline = off;
+  $('offline-btn').textContent = off ? '已离线' : '离线保存';
+  $('convert-text').textContent = (t==='doc')
+    ? '电脑端已转换 · 结果已缓存（可离线查看）'
+    : '源自 /file/content · 已写入预览缓存';
+  pickType(t);
+  $('s-file').classList.add('active');
+  $('tabbar').classList.add('hide');
+}
+function popFile(){ $('s-file').classList.remove('active'); $('tabbar').classList.remove('hide'); }
+function pickType(t){
+  document.querySelectorAll('.ftab').forEach(x=>x.classList.toggle('on', x.dataset.t === t));
+  $('viewer-body').innerHTML = VIEW[t]();
+}
+function toggleOffline(){
+  offline = !offline;
+  $('offline-btn').textContent = offline ? '已离线' : '离线保存';
+  toast(offline ? '已保存到离线缓存 · 不会被清理策略淘汰' : '已从离线缓存移除');
+}
+
+/* ---------- 对话内容 ---------- */
+let permsLeft = 1;
+function renderChat(){
+  $('chat-body').innerHTML = `
+    <div class="bubble me">把 auth 中间件拆成独立模块，顺便加上单元测试</div>
+    <div class="bubble ai" style="padding-bottom:6px">
+      拆成三步走，跑完会给你看 diff。
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:2px">
+        <div class="step done"><span class="box">${svgIco(ICONS.check,11)}</span><span>读取现有 middleware.ts</span></div>
+        <div class="step done"><span class="box">${svgIco(ICONS.check,11)}</span><span>抽出 JWT 签发与校验</span></div>
+        <div class="step"><span class="box">${svgIco(ICONS.check,11)}</span><span>补单元测试并跑通</span></div>
+      </div>
+    </div>
+    <div class="tool-card"><span class="spin"></span>正在写入 <code>src/auth/jwt.ts</code></div>
+    <div class="perm" id="perm-card">
+      <div class="perm-head">${svgIco('<path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',15)}权限请求 · 需要你确认</div>
+      <div class="perm-body">本次操作要执行 <code>npm i jsonwebtoken</code>，会修改 <code>package.json</code> 并联网下载依赖。</div>
+      <div class="perm-actions" id="perm-actions">
+        <button class="btn primary" onclick="approve(true)">批准</button>
+        <button class="btn" onclick="approve(false)">拒绝</button>
+      </div>
+    </div>`;
+}
+function approve(ok){
+  permsLeft = 0;
+  const acts = $('perm-actions'); if(acts) acts.classList.add('gone');
+  toast(ok ? '已批准 · 电脑端继续执行' : '已拒绝 · 已通知电脑端停止该步骤');
+  if(!ok) return;
+  setTimeout(()=>{
+    const body = $('chat-body');
+    const steps = body.querySelectorAll('.step');
+    if(steps[2]) steps[2].classList.add('done');
+    const card = document.createElement('div');
+    card.innerHTML = `
+      <div class="tool-card" style="margin-bottom:14px"><span class="spin"></span>运行 <code>npx vitest run auth</code></div>
+      <div class="bubble ai" id="stream-bubble"><span id="stream-text"></span><span class="caret"></span></div>
+      <div class="artifact">
+        <div class="artifact-head">
+          <span class="artifact-ico">${svgIco(ICONS.code,17)}</span>
+          <span class="artifact-t"><b>本次任务产出</b><small>3 个文件 · 248 行改动</small></span>
+          <span class="chip solid">查看</span>
+        </div>
+        <div class="diff" id="diff-view">
+          <div class="ln ctx"><span class="gutter">41</span><span>export function auth(req, res, next) {</span></div>
+          <div class="ln del"><span class="gutter">42</span><span>-  const t = req.headers.token</span></div>
+          <div class="ln add"><span class="gutter">42</span><span>+  const t = readToken(req)</span></div>
+          <div class="ln add"><span class="gutter">43</span><span>+  if (!verifyJwt(t)) return reject(res)</span></div>
+          <div class="ln ctx"><span class="gutter">44</span><span>  next()</span></div>
+          <div class="ln ctx"><span class="gutter">45</span><span>}</span></div>
+        </div>
+        <div class="artifact-foot"><span>3 个文件</span><span class="stat-add">+248</span><span class="stat-del">−76</span><span style="margin-left:auto">点击展开 diff</span></div>
+      </div>`;
+    while(card.firstChild) body.appendChild(card.firstChild);
+    const art = body.querySelector('.artifact');
+    art.onclick = ()=>{ const d = body.querySelector('#diff-view'); d.classList.toggle('open'); };
+    streamText('测试全部通过。JWT 逻辑已抽到独立模块，中间件只剩校验与转发，职责清晰了。');
+    setTimeout(()=>art.scrollIntoView({behavior:'smooth',block:'nearest'}),900);
+  },620);
+}
+function streamText(full){
+  const el = $('stream-text'); if(!el) return;
+  let i = 0;
+  const tick = ()=>{
+    if(!el.isConnected) return;
+    el.textContent = full.slice(0, ++i);
+    if(i < full.length) setTimeout(tick, 18);
+    else { const c = document.querySelector('.caret'); if(c) c.remove(); }
+  };
+  tick();
+}
+
+/* ---------- 导航 ---------- */
+let tab = 'home';
+function setTab(name){
+  if(name === tab) return;
+  tab = name;
+  document.querySelectorAll('.tab-screen').forEach(s=>s.classList.remove('active'));
+  $('s-'+name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+}
+function openChat(id){
+  const s = SESSIONS.find(x=>x.id===id);
+  $('chat-title').textContent = s ? s.title : '会话';
+  renderChat();
+  $('s-chat').classList.add('active');
+  $('tabbar').classList.add('hide');
+  $('abort-btn').style.display = (s && s.status==='run') ? '' : 'none';
+}
+function pop(){
+  $('s-chat').classList.remove('active');
+  $('tabbar').classList.remove('hide');
+}
+
+/* ---------- 底部弹层：模型切换 ---------- */
+function openSheet(id){ $('backdrop').classList.add('show'); $(id || 'sheet').classList.add('show'); }
+function closeSheet(){
+  document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('show'));
+  $('backdrop').classList.remove('show');
+}
+function openWs(){ openSheet('ws-sheet'); }
+function pickWs(el, path){
+  document.querySelectorAll('#ws-sheet .mrow').forEach(r=>r.classList.remove('sel'));
+  el.classList.add('sel');
+  $('ws-label').textContent = path;
+  if($('def-ws')) $('def-ws').textContent = path.split('/').pop();
+  closeSheet();
+  setTimeout(()=>toast('已切换工作区：' + path), 220);
+}
+function pickDev(el, name){
+  document.querySelectorAll('#dev-sheet .mrow').forEach(r=>r.classList.remove('sel'));
+  el.classList.add('sel');
+  $('conn-name').textContent = '已连接 · ' + name;
+  closeSheet();
+  setTimeout(()=>toast('已切换到 ' + name), 220);
+}
+function pickModel(el, name){
+  document.querySelectorAll('.mrow').forEach(r=>r.classList.remove('sel'));
+  el.classList.add('sel');
+  $('chip-model').textContent = name;
+  closeSheet();
+  setTimeout(()=>toast('已切换到 ' + name), 220);
+}
+
+/* ---------- 交互反馈 ---------- */
+function sendMsg(){
+  const inp = $('msg-input'); const v = inp.value.trim();
+  if(!v) return;
+  const body = $('chat-body');
+  const me = document.createElement('div');
+  me.className = 'bubble me'; me.textContent = v;
+  body.appendChild(me);
+  inp.value = ''; updateSend();
+  const dots = document.createElement('div');
+  dots.className = 'bubble ai dots'; dots.innerHTML = '<i></i><i></i><i></i>';
+  setTimeout(()=>{
+    body.appendChild(dots);
+    dots.scrollIntoView({behavior:'smooth',block:'end'});
+    setTimeout(()=>{
+      dots.remove();
+      const ai = document.createElement('div');
+      ai.className = 'bubble ai';
+      ai.innerHTML = '<span id="stream-text"></span><span class="caret"></span>';
+      body.appendChild(ai);
+      ai.scrollIntoView({behavior:'smooth',block:'end'});
+      streamText('收到。这条指令已下发到电脑端，执行进度会实时同步回来。');
+    }, 1100);
+  }, 120);
+}
+function updateSend(){
+  const v = $('msg-input').value.trim();
+  $('send-btn').classList.toggle('off', !v);
+}
+function abortRun(){
+  const s = SESSIONS.find(x=>x.id==='a');
+  if(s){ s.status='ok'; s.label='已中断'; s.meta='用户手动中断'; s.icon='ok';
+         s.svg='<path d="M6 6h12v12H6z"/>'; renderSessions(); }
+  const steps = document.querySelectorAll('.step');
+  if(steps.length){ steps.forEach(x=>x.classList.remove('done')); }
+  $('abort-btn').style.display='none';
+  toast('已发送中断指令 · /session/:id/abort');
+}
+function switchDevice(){ openSheet('dev-sheet'); }
+let toastTimer;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+/* ---------- 初始化 ---------- */
+renderSkeleton();
+renderArtifacts();
+setTimeout(()=>{
+  renderSessions();
+  $('msg-input').addEventListener('input', updateSend);
+}, 850);
+</script>
+</body>
+</html>

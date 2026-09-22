@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    只暴露"分享暂存区"这一个子目录。
+    因为本地文件以 blobId（sha256 指纹）命名，直接分享会显示一串哈希。
+    所以分享时先把文件以真实文件名落一份硬链接到 share/，再从那里生成 content:// URI。
+    绝不暴露 filesDir 根目录或整个存储。
+-->
+<paths>
+    <files-path name="share" path="share/" />
+    <cache-path name="share_cache" path="share/" />
+</paths>

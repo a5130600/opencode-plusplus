@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        纯 framework 主题：不依赖 AppCompat / Material XML 主题。
+        界面全部由 Compose 渲染，这里只负责窗口层（背景、系统栏、挖孔）。
+
+        这块是全面屏观感的关键，四条都不能省：
+          - 状态栏 / 导航栏透明，让内容真正铺满；
+          - windowLightStatusBar / windowLightNavigationBar 置 true，
+            因为我们界面是浅色的，系统栏图标必须是深色，否则白底白字看不见；
+          - windowLayoutInDisplayCutoutMode=shortEdges 允许内容画进挖孔区，
+            再靠 Insets.kt 里的 safeDrawing 把内容避开摄像头；
+          - enforceNavigationBarContrast=false 关掉系统在透明导航栏后面自动加的
+            半透明遮罩 —— 不关的话屏幕底部会多一条灰带，看着像没适配。
+    -->
+    <style name="Theme.OpenCode" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

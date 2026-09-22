@@ -1,0 +1,22 @@
+# 构建产物与缓存（android/.gitignore 已覆盖，这里再兜一层，
+# 防止从根目录执行 git add -A 时把构建产物扫进来）
+android/build/
+android/app/build/
+android/.gradle/
+android/.kotlin/
+android/local.properties
+
+# 归档的安装包（20MB 一个，不进版本库）
+builds/
+*.apk
+*.aab
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器
+.vscode/
+*.swp
+*~

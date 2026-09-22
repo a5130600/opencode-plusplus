@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ink">#1E1E1B</color>
+    <color name="bg">#EFEDE8</color>
+    <color name="surface">#FFFFFF</color>
+    <!-- 与官方标记同一个底色（opencode.ai/favicon.svg 的 #131010），不是主题的 Ink -->
+    <color name="ic_launcher_background">#131010</color>
+</resources>

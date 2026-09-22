@@ -1,0 +1,71 @@
+# opencode 桌面版 v2 /api/event 真实事件样本
+# 来源: http://127.0.0.1:49374  version=2.0.11
+# 抓取方式: 建临时会话 + 发一句 prompt，全程监听
+# 共 22 条
+
+--- #1  t+0.0s ---
+data: {"id":"evt_0c001b205001G4SkeT6YgxAWEA","type":"server.connected","data":{}}
+
+--- #2  t+0.0s ---
+: heartbeat
+
+--- #3  t+2.0s ---
+data: {"id":"evt_0c001b9b9001jD6vNhTWwuVpJu","created":1789927733689,"type":"session.created","location":{"directory":"C:\\Users\\demo"},"data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","slug":"silent-tiger","version":"2.0.11","projectID":"08e0be1905144db37524ea3d90e18681b9c3db60","location":{"directory":"C:\\Users\\demo"},"subpath":"","title":"【临时】事件抓取用，可删"},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":0,"version":1}}
+
+--- #4  t+2.0s ---
+data: {"id":"evt_0c001b9c10019JEQvmo3LVJj89","created":1789927733697,"type":"session.inbox.enqueued","location":{"directory":"C:\\Users\\demo"},"data":{"inboxID":"msg_0c001b9c0001aL80PITEUGrXIK","sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","item":{"type":"user","payload":{"text":"只回复两个字：pong。不要调用任何工具。"},"delivery":"steer"}},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":1,"version":1}}
+
+--- #5  t+2.0s ---
+data: {"id":"evt_0c001b9c4001lVxtugfdxYxDyK","created":1789927733700,"type":"session.execution.started","data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM"},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":2,"version":1}}
+
+--- #6  t+2.0s ---
+data: {"id":"evt_0c001b9cd001xIXdvHW6AWN1TJ","created":1789927733709,"metadata":{"instructions":{"initial":true}},"type":"session.instructions.updated","location":{"directory":"C:\\Users\\demo"},"data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","delta":{"core/environment":"ec0eeb2427f60962f9d4c1a1dc715ca08ebe6b23af9d40c48c1ea754dc30a2b1","core/date":"6a76aa89fcc8086f3abb8b9dc2b9ceafa3405dd2b3cdc263b339d36120433008","core/codemode":"cf52fcbcde861ccfefdc6633ee3cb84036524f86c72f976a7315e05dc01a15e1","core/skill-guidance":"8394362d28c82fa4d13c7a9f5568c05680f6687e07db8f426a0e3c92f3027dc9"}},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":3,"version":2}}
+
+--- #7  t+2.0s ---
+data: {"id":"evt_0c001b9cf001ibTlnzRS57vcWZ","created":1789927733711,"type":"session.inbox.delivered","location":{"directory":"C:\\Users\\demo"},"data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","inboxID":"msg_0c001b9c0001aL80PITEUGrXIK"},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":4,"version":1}}
+
+--- #8  t+2.9s ---
+data: {"id":"evt_0c001bd1d001hJw9PSvza95L5G","created":1789927734557,"type":"session.step.started","location":{"directory":"C:\\Users\\demo"},"data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","agent":"build","model":{"id":"deepseek-v4-flash-vision-exp","providerID":"deepseek"},"assistantMessageID":"msg_0c001b9d5001kiDDqzZX97LuES","started":1789927733727},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":5,"version":1}}
+
+--- #9  t+2.9s ---
+data: {"id":"evt_0c001bd1f001UwRqJ3ZUI0b0Mb","created":1789927734559,"type":"session.text.started","location":{"directory":"C:\\Users\\demo"},"data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","assistantMessageID":"msg_0c001b9d5001kiDDqzZX97LuES","ordinal":0},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":6,"version":1}}
+
+--- #10  t+2.9s ---
+data: {"id":"evt_0c001bd21001JX0nvnxXGTWMQm","created":1789927734561,"type":"session.text.delta","location":{"directory":"C:\\Users\\demo"},"data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","assistantMessageID":"msg_0c001b9d5001kiDDqzZX97LuES","ordinal":0,"delta":"pong"}}
+
+--- #11  t+2.9s ---
+data: {"id":"evt_0c001bd22001Cy9GE90zPcjZq9","created":1789927734562,"type":"session.text.ended","location":{"directory":"C:\\Users\\demo"},"data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","assistantMessageID":"msg_0c001b9d5001kiDDqzZX97LuES","ordinal":0,"text":"pong"},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":7,"version":1}}
+
+--- #12  t+2.9s ---
+data: {"id":"evt_0c001bd230015kBPvWVgYfNKDJ","created":1789927734563,"type":"session.step.streamed","location":{"directory":"C:\\Users\\demo"},"data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","assistantMessageID":"msg_0c001b9d5001kiDDqzZX97LuES"},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":8,"version":1}}
+
+--- #13  t+2.9s ---
+data: {"id":"evt_0c001bd240017o513575JK1cRO","created":1789927734564,"type":"session.step.ended","location":{"directory":"C:\\Users\\demo"},"data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","assistantMessageID":"msg_0c001b9d5001kiDDqzZX97LuES","finish":"stop","rawFinish":"stop","cost":0.000910668,"tokens":{"input":6054,"output":3,"reasoning":0,"cache":{"read":256,"write":0}}},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":9,"version":1}}
+
+--- #14  t+2.9s ---
+data: {"id":"evt_0c001bd26001Na8Xs1CWZhHWzf","created":1789927734566,"type":"session.usage.updated","data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM","cost":0.000910668,"tokens":{"input":6054,"output":3,"reasoning":0,"cache":{"read":256,"write":0}}}}
+
+--- #15  t+2.9s ---
+data: {"id":"evt_0c001bd27001SAEdzPUWyM97pW","created":1789927734567,"type":"session.execution.succeeded","data":{"sessionID":"ses_f3ffe4649ffegUVK3ugxY41kiM"},"durable":{"aggregateID":"ses_f3ffe4649ffegUVK3ugxY41kiM","seq":10,"version":1}}
+
+--- #16  t+5.2s ---
+data: {"id":"evt_0c001c5f9001WypkBMPSGa4drQ","created":1789927736825,"type":"provider.updated","location":{"directory":"C:\\Users\\demo"},"data":{}}
+
+--- #17  t+5.2s ---
+data: {"id":"evt_0c001c602001YTPrNgXOJHFUHa","created":1789927736834,"type":"model.updated","location":{"directory":"C:\\Users\\demo"},"data":{}}
+
+--- #18  t+5.4s ---
+data: {"id":"evt_0c001c6c10010fTMi3h6EidvBo","created":1789927737025,"type":"provider.updated","location":{"directory":"C:\\Users\\demo\\Documents\\Default Project"},"data":{}}
+
+--- #19  t+5.4s ---
+data: {"id":"evt_0c001c6c80018KI8WLtXS2TpK9","created":1789927737032,"type":"model.updated","location":{"directory":"C:\\Users\\demo\\Documents\\Default Project"},"data":{}}
+
+--- #20  t+15.0s ---
+: heartbeat
+
+--- #21  t+30.0s ---
+: heartbeat
+
+--- #22  t+45.0s ---
+: heartbeat
+
